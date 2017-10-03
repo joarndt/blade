@@ -218,25 +218,30 @@ bindsym XF86AudioPrev exec playerctl previous
 # lock
 bindsym $mod+Shift+x exec i3lock --color 475263
 
+# layouts
+exec --no-startup-id i3-msg 'workspace $workspace2; append_layout /home/blade/.config/i3/workspace-2.json'
+
 # disable Titlebar
 for_window [class="^.*"] border pixel 0
 
-assign [class="ckb"] $workspace9
+assign [class="Chromium-browser"] $workspace1
 assign [class="TeamSpeak 3"] $workspace2
+assign [class="Sublime_text"] $workspace3
 assign [class="TelegramDesktop"] $workspace2
 assign [class="Steam"] $workspace5
 assign [class="RocketLeague"] $workspace5
-assign [class="Chromium-browser"] $workspace1
 assign [class="Thunar"] $workspace6
-assign [class="Sublime_text"] $workspace3
+assign [class="ckb"] $workspace9
+
 
 #autostart 
 exec_always feh --bg-scale /home/blade/Bilder/Wallpaper/landscape.jpg
-exec --no-startup-id i3-msg 'workspace $workspace10; exec spotify'
-exec --no-startup-id i3-msg 'workspace $workspace9; exec ckb'
 exec --no-startup-id i3-msg 'workspace $workspace1; exec chromium-browser'
 exec --no-startup-id i3-msg 'workspace $workspace2; exec telegram'
 exec --no-startup-id i3-msg 'workspace $workspace2; exec ts3'
-exec --no-startup-id i3-msg 'workspace $workspace6; exec thunar'
-exec redshift -t 6500:4100
+exec --no-startup-id i3-msg 'workspace $workspace2; exec gnome-terminal'
+exec --no-startup-id i3-msg 'workspace $workspace2; exec gnome-terminal'
+exec --no-startup-id i3-msg 'workspace $workspace10; exec spotify'
+exec --no-startup-id i3-msg 'workspace $workspace9; exec ckb -b'
+exec redshift -t 6500:4000
 exec compton -f
