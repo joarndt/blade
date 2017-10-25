@@ -1,11 +1,11 @@
 # The Illumminazibot
+import time
 import subprocess
 import telepot
 from telepot.loop import MessageLoop
-from message import Command, MessageFactory
+from message import *
 from client import *
-import email
-import io
+
 
 
 def handle(msg): 
@@ -47,9 +47,8 @@ def handle(msg):
             if 'username' in msg['from']:
                 txt += msg['from']['username']
             elif 'first_name' in msg['from']:
-                        txt += msg['from']['first_name']
-            txt +=': '
-            txt +=msg['text']
+                txt += msg['from']['first_name']
+            txt +=': ' + msg['text']
             txt = txt.replace(" ","\s")
             com += txt
             command = Command(
@@ -61,26 +60,37 @@ def handle(msg):
 listen = True
 #variable for debugmode
 debug = False
+#variable for invokerid
+invokerid = 0
 
 
-#read chat ids from files
-file = open('chats.txt')
+#read necessary data for bot
+file = open('data.txt')
+
+#bot token for interaction with Telegram
+#had to remove the \n for use in function
+token = str(file.readline()).replace("\n", "") 
+#auth code for TeamspeakClientQuery
+auth = file.readline()
+#chat id for interaction with Teamspeak
 ts3 = int(file.readline())
-illumuhnazi = int(file.readline())
-file.close
 
-#read bot_token from file
-file = open('token.txt')
-token = file.readline()
+#end of reading
 file.close
 
 #start teamspeak client connection
-client = Client()
+client = Client(auth)
 client.subscribe()
 
 #start bot with bot_token
 bot = telepot.Bot(token)
 MessageLoop(bot, handle).run_as_thread()
+
+#command to get current userid
+whoami = Command(
+    'whoami',
+)
+client.send_command(whoami)
 
 print 'I am listening ...'
 
@@ -92,7 +102,7 @@ while 1:
     for message in messages:
 
         #outputs teamspeakchat in telegram group
-        if message.command == 'notifytextmessage' and message['invokername']!='BIade' and listen:
+        if message.command == 'notifytextmessage' and message['invokerid']!=invokerid and listen:
             txt = message['invokername']
             txt+=':\n'
             txt+= message['msg']
@@ -100,17 +110,20 @@ while 1:
             txt = txt.replace("[/URL]","")
             bot.sendMessage(ts3,txt)
 
+        #gets current userid
+        elif message.is_response_to(whoami):
+            invokerid = message.__getitem__('clid')
+
         #status output for telegram group    
         elif message.is_response():
             clients = 'Currently Online:'
-            for part in message.response:
-                clients+='\n'
-                clients+=part['client_nickname']
+            for part in message.responses:
+                clients+='\n' + part['client_nickname']
             clients+='\nlisten: '
             if listen:
                 clients+='True'
             else :
                 clients+='False'
-            bot.sendMessage(ts3,clients)        
+            bot.sendMessage(ts3,clients)  
 
     time.sleep(1)

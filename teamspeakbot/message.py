@@ -218,6 +218,10 @@ class MultipartMessage(MessageBase):
     def is_response(self):
         return True
 
+    def is_response_to(self, command):
+        return False
+
+
     def is_reset_message(self):
         return False
 

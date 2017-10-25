@@ -31,7 +31,7 @@ __all__ = ['Client']
 
 
 class Client(object):
-    def __init__(self, hostname='127.0.0.1', port=25639, timeout=0.25):
+    def __init__(self, auth, hostname='127.0.0.1', port=25639, timeout=0.25):
         self.pipe_out = Queue()
         self.pipe_in = Queue()
         self.timeout = timeout
@@ -44,10 +44,9 @@ class Client(object):
             )
         self.proc.start()
         self.logger.debug("Spawned subprocess %s" % self.proc.pid)
-        auth = 'auth apikey='
-        file = open('auth.txt')
-        auth += str(file.readline())
-
+        
+        auth = 'auth apikey=' + auth
+        
         command = Command(
                 str(auth),
             )
