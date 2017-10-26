@@ -1,12 +1,36 @@
 # The Illumminazibot
 import time
 import subprocess
+from subprocess import call
 import telepot
 from telepot.loop import MessageLoop
 from message import *
 from client import *
 
+def ts_start(auth):
+    cmd = ["ts3"]
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    print 'joining Teamspeak'
+    time.sleep(2)
+    client = Client(auth)
+    client.subscribe()
+    set_ts_running(True)
+    return client
 
+def ts_stop(client):
+    set_ts_running(False)
+    client.close()
+    call(["killall", "ts3client_linux_amd64"])
+
+def send_whoami():
+    com = Command(
+        'whoami',
+    )
+    client.send_command(com)
+
+def set_ts_running(tmp):
+    global ts_running
+    ts_running = tmp
 
 def handle(msg): 
 
@@ -26,21 +50,33 @@ def handle(msg):
         #writes command for current channelclients
         if chat_id == ts3 and command=='/status':
             com = Command(
-                    'channelclientlist cid=874',
+                    'channelclientlist cid=' + channelid,
                 )
             client.send_command(com)
 
         #unlisten from teamspeakchat
-        elif chat_id == ts3 and command=='/stfu':
+        elif chat_id == ts3 and command == '/stfu':
             listen = False
             bot.sendMessage(ts3,'stopped listening to TS3 Chat')
 
         #listen to teamspeakchat
-        elif chat_id == ts3 and command=='/listen':
+        elif chat_id == ts3 and command == '/listen':
             listen = True
             bot.sendMessage(ts3,'started listening to TS3 Chat')
-
-        #writes textmessage into teamspeakchat     
+        
+        #quitting teamspeak
+        elif chat_id == ts3 and command == '/quit':
+            global client
+            ts_stop(client)
+        
+        #joining teamspeak
+        elif chat_id == ts3 and command == '/join':
+            global client
+            client = ts_start(auth)
+            client.subscribe()
+            send_whoami()
+        
+        #builds textmessages and writes it into teamspeakchat     
         elif chat_id == ts3:
             com  = "sendtextmessage targetmode=2 msg="
             txt = ''
@@ -60,8 +96,10 @@ def handle(msg):
 listen = True
 #variable for debugmode
 debug = False
+ts_running = False
 #variable for invokerid
 invokerid = 0
+channelid = 0
 
 
 #read necessary data for bot
@@ -79,51 +117,56 @@ ts3 = int(file.readline())
 file.close
 
 #start teamspeak client connection
-client = Client(auth)
-client.subscribe()
+client = ts_start(auth)
 
 #start bot with bot_token
 bot = telepot.Bot(token)
 MessageLoop(bot, handle).run_as_thread()
 
-#command to get current userid
-whoami = Command(
-    'whoami',
-)
-client.send_command(whoami)
-
 print 'I am listening ...'
+
+whoami = Command(
+        'whoami',
+    )
+client.send_command(whoami)
 
 #listen to teamspeakchat
 while 1:
+    if ts_running:
+        #get teamspeak clientquery messages
+        messages = client.get_messages()
+        for message in messages:
+            if debug: print message
+            print message
 
-    #get teamspeak clientquery messages
-    messages = client.get_messages()
-    for message in messages:
+            #outputs teamspeakchat in telegram group
+            if message.command == 'notifytextmessage' and message['invokerid']!=invokerid and listen:
+                txt = message['invokername']
+                txt+=':\n'
+                txt+= message['msg']
+                txt = txt.replace("[URL]","")
+                txt = txt.replace("[/URL]","")
+                bot.sendMessage(ts3,txt)
 
-        #outputs teamspeakchat in telegram group
-        if message.command == 'notifytextmessage' and message['invokerid']!=invokerid and listen:
-            txt = message['invokername']
-            txt+=':\n'
-            txt+= message['msg']
-            txt = txt.replace("[URL]","")
-            txt = txt.replace("[/URL]","")
-            bot.sendMessage(ts3,txt)
+            #gets current userid
+            elif message.is_response_to(whoami):
+                invokerid = message.__getitem__('clid')
+                channelid = message.__getitem__('cid')
 
-        #gets current userid
-        elif message.is_response_to(whoami):
-            invokerid = message.__getitem__('clid')
-
-        #status output for telegram group    
-        elif message.is_response():
-            clients = 'Currently Online:'
-            for part in message.responses:
-                clients+='\n' + part['client_nickname']
-            clients+='\nlisten: '
-            if listen:
-                clients+='True'
-            else :
-                clients+='False'
-            bot.sendMessage(ts3,clients)  
+            #status output for telegram group    
+            elif message.is_response():
+                clients = 'Currently Online:'
+                if debug:  print message
+                if 'client_nickname' in message.keys():
+                    clients += '\n' + message.__getitem__('client_nickname')
+                else :
+                    for part in message.responses:
+                        clients+='\n' + part['client_nickname']
+                clients+='\nlisten: '
+                if listen:
+                    clients+='True'
+                else :
+                    clients+='False'
+                bot.sendMessage(ts3,clients)  
 
     time.sleep(1)
