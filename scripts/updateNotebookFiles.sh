@@ -12,9 +12,11 @@ git add .
 cd /home/blade/git/blade/scripts
 git add .
 
+#shows u changes
+git status
+
 #commit  changes
 git commit -m "update notebook files"
 
-#shows u changes
-git status
+
 
