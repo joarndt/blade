@@ -110,6 +110,9 @@ class Message(MessageBase):
             return False
         return True
 
+    def is_multipart_message(self):
+        return False
+
     def is_response_to(self, command):
         if self.is_response() and self.origination == command:
             return True
@@ -220,6 +223,9 @@ class MultipartMessage(MessageBase):
 
     def is_response_to(self, command):
         return False
+
+    def is_multipart_message(self):
+        return True
 
 
     def is_reset_message(self):
