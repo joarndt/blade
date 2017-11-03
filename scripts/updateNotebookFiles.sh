@@ -15,5 +15,6 @@ git add .
 #commit  changes
 git commit -m "update notebook files"
 
-#push them into git
-git push
+#shows u changes
+git status
+
