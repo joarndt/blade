@@ -1,5 +1,6 @@
-#update notebookfiles in the git#
-#################################
+#######################################
+### update notebookfiles in the git ###
+#######################################
 
 #copy all costum notebookfiles
 cp -r -b /home/blade/.config/i3/* /home/blade/git/blade/i3wm/notebook_config
