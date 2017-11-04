@@ -186,7 +186,8 @@ bar {
 }
 
 #handle shutdown
-exec --no-startup-id xautolock -time 5 -locker "i3lock --color 475263"
+#exec --no-startup-id xautolock -time 2 -locker "i3lock --color 475263"
+exec --no-startup-id xautolock -time 7 -locker "sudo pm-hibernate"
 
 set $Locker i3lock --color 475263 && sleep 1
 
