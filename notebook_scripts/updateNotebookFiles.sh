@@ -4,12 +4,12 @@
 
 #copy all costum notebookfiles
 cp -r -b /home/blade/.config/i3/* /home/blade/git/blade/i3wm/notebook_config
-cp -r -b /home/blade/scripts/* /home/blade/git/blade/scripts
+cp -r -b /home/blade/scripts/* /home/blade/git/blade/notebook_scripts
 
 #add them to the git
 cd /home/blade/git/blade/i3wm/notebook_config
 git add .
-cd /home/blade/git/blade/scripts
+cd /home/blade/git/blade/notebook_scripts
 git add .
 
 #shows u changes
