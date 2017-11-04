@@ -1,0 +1,18 @@
+#!/bin/bash
+# Changes Cpu governor
+
+    case "$1" in
+        performance) echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+        ;;
+	powersave) echo powersave | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+        ;;
+	current) cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+	;;
+	perf) echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+        ;;
+        pwsave) echo powersave | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+        ;;
+        cur) cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+        ;;
+
+    esac

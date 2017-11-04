@@ -101,8 +101,8 @@ set $workspace8 "8 Email "
 set $workspace9 "9 Keyboard "
 set $workspace10 "10 Music "
 
-set $benq "DVI-I-1"
-set $samsung "DVI-D-0"
+set $benq "DVI-D-0"
+set $samsung "DP-1"
 
 
 workspace $workspace1 output $benq
@@ -235,7 +235,8 @@ assign [class="ckb"] $workspace9
 
 
 #autostart 
-exec_always feh --bg-scale /home/blade/Bilder/Wallpaper/landscape.jpg
+exec_always feh --bg-scale /home/blade/Bilder/Wallpaper/Haus.jpg
+exec dropbox start
 exec --no-startup-id i3-msg 'workspace $workspace1; exec chromium-browser'
 exec --no-startup-id i3-msg 'workspace $workspace2; exec telegram'
 exec --no-startup-id i3-msg 'workspace $workspace2; exec ts3'
