@@ -1,11 +1,16 @@
 # The Illumminazibot
 import time
+import sys
 import subprocess
 from subprocess import call
 import telepot
+import telepot.api
+import urllib3 
 from telepot.loop import MessageLoop
 from message import *
 from client import *
+
+
 
 #starts Teamspeak
 def ts_start(auth):
@@ -35,13 +40,12 @@ def ts_stop(client):
     #close connection and quit Teamspeak
     set_ts_running(False)
     client.close()
-    call(["killall", "ts3client_linux_amd64"])
+    call(["killall","-SIGKILL" , "ts3client_linux_amd64"])
+    time.sleep(60);
 
 #sends whomai command for verification
 def send_whoami(client):
-    com = Command(
-        'whoami',
-    )
+    com = Command('whoami')
     client.send_command(com)
 
 #sets ts_running variable
@@ -107,7 +111,7 @@ def handle(msg):
             #listen to teamspeakchat
             elif chat_id == ts3 and command == '/listen':
                 listen = True
-                bot.sendMessage(ts3,'started listening to TS3 Chat')
+                write_telegram("started listening to TS3 Chat")
             
             #builds textmessages and writes it into teamspeakchat     
             elif chat_id == ts3:
@@ -124,21 +128,22 @@ def handle(msg):
                         str(com),
                     )
                 client.send_command(command)
-        else:
-            write_telegram('bot is not in Teamspeak')
+#        else:
+#            write_telegram('bot is not in Teamspeak')
 
 #variable for listening to ts chat 
 listen = True
+
 #variable for debugmode
 debug = False
+if len(sys.argv)==1 and sys.argv[0] == "-debug":
+    debug = True
+
 ts_running = False
 #variable for invokerid
 invokerid = 0
 channelid = 0
-#whoami command
-whoami = Command(
-        'whoami',
-    )
+
 
 #read necessary data for bot
 file = open('data.txt')
@@ -153,6 +158,12 @@ ts3 = int(file.readline())
 
 #end of reading
 file.close
+
+telepot.api._pools = {
+    'default': urllib3.PoolManager(num_pools=3, maxsize=10, retries=6, timeout=30),
+}
+bot = telepot.Bot(token)    
+
 
 #start bot with bot_token
 bot = telepot.Bot(token)
@@ -170,7 +181,6 @@ while 1:
         messages = client.get_messages()
         for message in messages:
             if debug: print message
-            print message
 
             #outputs teamspeakchat in telegram group
             if message.command == 'notifytextmessage' and message['invokerid']!=invokerid and listen:
@@ -180,14 +190,14 @@ while 1:
                 bot.sendMessage(ts3,txt)
 
             #gets current userid
-            elif message.is_response_to(whoami):
+            elif message.is_response_to(Command('whoami')):
                 invokerid = message.__getitem__('clid')
                 channelid = message.__getitem__('cid')
 
             #status output for telegram group    
             elif message.is_response():
+
                 clients = 'Currently Online:'
-                if debug:  print message
 
                 if message.is_multipart_message():
                     for part in message.responses:
@@ -201,6 +211,6 @@ while 1:
                     clients+='True'
                 else :
                     clients+='False'
-                bot.sendMessage(ts3,clients)  
+                write_telegram("clients")
 
     time.sleep(1)
