@@ -21,7 +21,7 @@ def ts_start(auth):
     #starts Teamspeak
     cmd = ["ts3"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    time.sleep(2)
+    time.sleep(10)
 
     #initiate Clientquery connection
     client = Client(auth)
