@@ -2,6 +2,7 @@
 import time
 import sys
 import subprocess
+import threading
 from subprocess import call
 import telepot
 import telepot.api
@@ -58,6 +59,16 @@ def set_ts_running(tmp):
 def write_telegram(string):
     global bot
     bot.sendMessage(ts3, string)
+
+def __keepAliveThread():
+    while True:
+        bot.getMe()
+        time.sleep(60)
+
+def keepAlive():
+    t = threading.Thread(target=__keepAliveThread)
+    t.daemon = True
+    t.start()
 
 #Telegram bot loop 
 def handle(msg): 
@@ -168,6 +179,9 @@ bot = telepot.Bot(token)
 #start bot with bot_token
 bot = telepot.Bot(token)
 MessageLoop(bot, handle).run_as_thread()
+
+
+keepAlive()
 
 #start teamspeak client connection
 client = ts_start(auth)
