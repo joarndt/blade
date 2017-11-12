@@ -209,6 +209,6 @@ while 1:
                     clients+='True'
                 else :
                     clients+='False'
-                write_telegram("clients")
+                write_telegram(clients)
 
     time.sleep(1)
