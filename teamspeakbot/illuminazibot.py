@@ -112,6 +112,7 @@ def handle(msg):
 
             #listen to teamspeakchat
             elif chat_id == ts3 and command == '/listen':
+                global listen
                 listen = True
                 write_telegram("started listening to TS3 Chat")
             
