@@ -106,6 +106,7 @@ def handle(msg):
 
             #unlisten from teamspeakchat
             elif chat_id == ts3 and command == '/stfu':
+                global listen
                 listen = False
                 bot.sendMessage(ts3,'stopped listening to TS3 Chat')
 
