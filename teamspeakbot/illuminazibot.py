@@ -21,7 +21,7 @@ def ts_start(auth):
     #starts Teamspeak
     cmd = ["ts3"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    time.sleep(10)
+    time.sleep(20)
 
     #initiate Clientquery connection
     client = Client(auth)
@@ -159,9 +159,6 @@ ts3 = int(file.readline())
 #end of reading
 file.close
 
-telepot.api._pools = {
-    'default': urllib3.PoolManager(num_pools=3, maxsize=10, retries=6, timeout=30),
-}
 bot = telepot.Bot(token)    
 
 
