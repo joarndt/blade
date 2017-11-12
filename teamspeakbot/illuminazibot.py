@@ -41,7 +41,7 @@ def ts_stop(client):
     set_ts_running(False)
     client.close()
     call(["killall","-SIGKILL" , "ts3client_linux_amd64"])
-    call(["killall","-SIGKILL" , "ts3client_linux"])
+    call(["killall","-SIGKILL" , "ts3client_linux_x86"])
     time.sleep(60);
 
 #sends whomai command for verification
