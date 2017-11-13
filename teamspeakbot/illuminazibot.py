@@ -158,7 +158,6 @@ ts_running = False
 invokerid = 0
 channelid = 0
 
-
 #read necessary data for bot
 file = open('data.txt')
 
@@ -173,14 +172,9 @@ ts3 = int(file.readline())
 #end of reading
 file.close
 
-bot = telepot.Bot(token)    
-
-
 #start bot with bot_token
 bot = telepot.Bot(token)
 MessageLoop(bot, handle).run_as_thread()
-
-
 keepAlive()
 
 #start teamspeak client connection
