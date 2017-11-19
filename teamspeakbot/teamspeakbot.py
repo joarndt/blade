@@ -71,7 +71,7 @@ class Teamspeakbot(object):
         #checks for textmessage
         if 'text' in msg:
 
-            command = msg['text']
+            command = msg['text'].split('@')[0]
             
             #debug output        
             if self.debug: print msg
