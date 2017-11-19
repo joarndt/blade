@@ -1,3 +1,0 @@
-from teamspeakbot import *
-
-Teamspeakbot()

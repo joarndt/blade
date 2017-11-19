@@ -96,7 +96,7 @@ class Message(MessageBase):
             raise ValueError("No command")
 
         self.raw_command = command
-
+        self.responses = [self]
         self.command = self._get_command_from_string(self.raw_command)
         self.args = self._get_arguments_from_string(self.raw_command)
 
