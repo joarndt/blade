@@ -88,7 +88,7 @@ class Teamspeakbot(object):
                 if self.ts_running:
                     self.writeTelegram('already in Teamspeak')
                 else:
-                    self.client = self.tsStart(auth)
+                    self.client = self.tsStart(self.auth)
                     self.client.subscribe()
 
             elif self.ts_running:
