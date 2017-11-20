@@ -38,11 +38,11 @@ class Teamspeakbot(object):
         ######################
         self.userFormat = "[b]"
         self.userColor ={
-            (106066030,"[color=#00aa00]"), #Blade
-            (128494099,"[color=#1C85FF]"), #Oracle         
-            (443210169,"[color=#caa047]"), #Imperial
-            (389880533,"[color=#BD5866]"), #NiSs4n
-            (0,"[color=#287065]"), #Velo
+            (106066030, "[color=#00aa00]", "Blade"),      #Blade
+            (128494099, "[color=#1C85FF]", "Oracle"),     #Oracle         
+            (443210169, "[color=#caa047]", "Imperial"),   #Imperial
+            (389880533, "[color=#BD5866]", "NiSs4n"),     #NiSs4n
+            (111111111, "[color=#287065]", "Velo"),       #Velo todo
         }
         self.chatFormat = "[/b][color=grey]"
 
@@ -122,7 +122,7 @@ class Teamspeakbot(object):
                 #unlisten from teamspeakchat
                 elif chat_id == self.ts3 and command == '/stfu':
                     self.listen = False
-                    self.bot.sendMessage(self.ts3,'stopped listening to TS3 Chat')
+                    self.writeTelegram('stopped listening to TS3 Chat')
 
                 #listen to teamspeakchat
                 elif chat_id == self.ts3 and command == '/listen':
@@ -131,15 +131,14 @@ class Teamspeakbot(object):
                 
                 #builds textmessages and writes it into teamspeakchat     
                 elif chat_id == self.ts3:
-                    
-                    com  = "sendtextmessage targetmode=2 msg=" + self.userFormat
-                    for part in self.userColor:
-                        if part[0] == user_id:
-                            com += part[1]
+                    self.writeTeamspeak(
+                        self.userFormat 
+                        + self.getUsername(msg) 
+                        + ': ' 
+                        + self.chatFormat 
+                        + msg['text']
+                    )
 
-                    com += (self.getUsername(msg) + ': ' + self.chatFormat + msg['text']).replace(" ","\s")
-                    
-                    self.client.send_command(Command(com.encode('utf-8')))
 #           else:
 #               writeTelegram('bot is not in Teamspeak')
     
@@ -199,6 +198,10 @@ class Teamspeakbot(object):
     def writeTelegram(self, string):
         self.bot.sendMessage(self.ts3, string)
 
+    def writeTeamspeak(self, string):
+        message  = "sendtextmessage targetmode=2 msg=" + string.replace(" ","\s")
+        self.client.send_command(Command(message.encode('utf-8')))
+
     #thread for keeping the connection
     def __keepAliveThread(self):
         while True:
@@ -216,15 +219,19 @@ class Teamspeakbot(object):
         t.daemon = True
         t.start()
 
-    #gets username from msg
+    #gets username from msg 
     def getUsername(self, msg):
-        if 'username' in msg['from']: return msg['from']['username']           
-        elif 'first_name' in msg['from']: return msg['from']['first_name']
+        #if known then colorize it and make default name
+        if 'id' in msg['from']:
+            for part in self.userColor:
+                if part[0] == msg['from']:
+                    return part[1] + part[2]
+        elif 'username' in msg['from']: 
+            return msg['from']['username']           
+        elif 'first_name' in msg['from']: 
+            return msg['from']['first_name']
         return "no username found"
 
-    
-
-    
 
     def tsMessageLoop(self, ts3):
         #listen to teamspeakchat
