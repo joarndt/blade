@@ -38,9 +38,9 @@ class Teamspeakbot(object):
         ######################
         self.userFormat = "[b]"
         self.userColor ={
-            (106066030, "[color=#00aa00]", "Blade"),      #Blade
+            (106066030, "[color=#00aa00]", "BIade"),      #BIade
             (128494099, "[color=#1C85FF]", "Oracle"),     #Oracle         
-            (443210169, "[color=#caa047]", "Imperial"),   #Imperial
+            (443210169, "[color=#caa047]", "ImperialPC"), #ImperialPC
             (389880533, "[color=#BD5866]", "NiSs4n"),     #NiSs4n
             (111111111, "[color=#287065]", "Velo"),       #Velo todo
         }
@@ -224,14 +224,13 @@ class Teamspeakbot(object):
         #if known then colorize it and make default name
         if 'id' in msg['from']:
             for part in self.userColor:
-                if part[0] == msg['from']:
+                if part[0] == msg['from']['id']:
                     return part[1] + part[2]
         elif 'username' in msg['from']: 
             return msg['from']['username']           
         elif 'first_name' in msg['from']: 
             return msg['from']['first_name']
         return "no username found"
-
 
     def tsMessageLoop(self, ts3):
         #listen to teamspeakchat
