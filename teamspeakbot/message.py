@@ -147,8 +147,10 @@ class Message(MessageBase):
         return args
 
     def __getitem__(self, key):
-        return self.args[key]
-
+        if key in self.args:
+            return self.args[key]
+        return "error"
+        
     def keys(self):
         return self.args.keys()
 

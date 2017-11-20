@@ -16,8 +16,7 @@ class Teamspeakbot(object):
     #init 
     def __init__(self):
 
-        #variable for listening to ts chat 
-        self.listen = True
+        
 
         #set debugmode
         #self.debug = sys.argv[0] == "-debug" or sys.argv[0] == "-d"
@@ -28,10 +27,32 @@ class Teamspeakbot(object):
         #parser.add_argument("-foo", ..., required=True)
         #parser.parse_args()
 
-        #indicates if ts is running
-        self.ts_running = False
+        #variable for listening to ts chat 
+        self.listen = True
 
+        #indicates if ts is running
+        self.tsRunning = False
+
+        ######################
+        ### Ts Chat Format ###
+        ######################
+        self.userFormat = "[b]"
+        self.userColor ={
+            (106066030,"[color=#00aa00]"), #Blade
+            (128494099,"[color=#1C85FF]"), #Oracle         
+            (443210169,"[color=#caa047]"), #Imperial
+            (389880533,"[color=#BD5866]"), #NiSs4n
+            (0,"[color=#287065]"), #Velo
+        }
+        self.chatFormat = "[/b][color=grey]"
+
+
+
+
+
+        #empty clientlist
         self.tsClients = []
+
         #set default ids
         self.invokerid = "0"
         self.channelid = "0"
@@ -67,6 +88,7 @@ class Teamspeakbot(object):
 
         #get chat id
         chat_id = msg['chat']['id']
+        user_id = msg['from']['id']        
 
         #checks for textmessage
         if 'text' in msg:
@@ -85,13 +107,13 @@ class Teamspeakbot(object):
             
             #joining teamspeak
             elif chat_id == self.ts3 and command == '/join':
-                if self.ts_running:
+                if self.tsRunning:
                     self.writeTelegram('already in Teamspeak')
                 else:
                     self.client = self.tsStart(self.auth)
                     self.client.subscribe()
 
-            elif self.ts_running:
+            elif self.tsRunning:
 
                 #writes command for current channelclients
                 if chat_id == self.ts3 and command=='/status':
@@ -109,13 +131,14 @@ class Teamspeakbot(object):
                 
                 #builds textmessages and writes it into teamspeakchat     
                 elif chat_id == self.ts3:
-                    com  = "sendtextmessage targetmode=2 msg="
+                    
+                    com  = "sendtextmessage targetmode=2 msg=" + self.userFormat
+                    for part in self.userColor:
+                        if part[0] == user_id:
+                            com += part[1]
 
-                    if 'username' in msg['from']:
-                        com += (msg['from']['username'] + ': ' + msg['text']).replace(" ","\s")
-                    elif 'first_name' in msg['from']:
-                        com += (msg['from']['first_name'] + ': ' + msg['text']).replace(" ","\s")
-
+                    com += (self.getUsername(msg) + ': ' + self.chatFormat + msg['text']).replace(" ","\s")
+                    
                     self.client.send_command(Command(com.encode('utf-8')))
 #           else:
 #               writeTelegram('bot is not in Teamspeak')
@@ -163,14 +186,14 @@ class Teamspeakbot(object):
         client.send_command(Command('channelclientlist cid=' + channelid))
 
     def tsQuit(self, client):
-        if self.ts_running:
+        if self.tsRunning:
             self.tsStop(client)
         else:
             self.writeTelegram('Not in Teamspeak')
 
-    #sets ts_running variable
+    #sets tsRunning variable
     def setTsRunning(self, tmp):
-        self.ts_running = tmp
+        self.tsRunning = tmp
 
     #write message into Telegram chat
     def writeTelegram(self, string):
@@ -182,7 +205,7 @@ class Teamspeakbot(object):
             self.bot.getMe()
             x=datetime.today()
             print x
-            if self.tsClients.__len__() == 1 and self.tsClients[0][0] == self.invokerid and self.ts_running:
+            if self.tsClients.__len__() == 1 and self.tsClients[0][0] == self.invokerid and self.tsRunning:
                 self.writeTelegram("auto quit")
                 self.tsQuit(self.client)
             time.sleep(60)
@@ -193,12 +216,20 @@ class Teamspeakbot(object):
         t.daemon = True
         t.start()
 
+    #gets username from msg
+    def getUsername(self, msg):
+        if 'username' in msg['from']: return msg['from']['username']           
+        elif 'first_name' in msg['from']: return msg['from']['first_name']
+        return "no username found"
+
+    
+
     
 
     def tsMessageLoop(self, ts3):
         #listen to teamspeakchat
         while 1:
-            if self.ts_running:
+            if self.tsRunning:
                 #get teamspeak clientquery messages
                 messages = self.client.get_messages()
                 for message in messages:
