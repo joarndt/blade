@@ -1,4 +1,5 @@
 # teamspeakbot
+import pickle
 from datetime import datetime
 import time
 import argparse
@@ -34,17 +35,11 @@ class Teamspeakbot(object):
         ### Ts Chat Format ###
         ######################
         self.userFormat = "[b]"
-        self.userInfo ={
-            (106066030, "[color=#00aa00]", "BIade"),      #BIade
-            (128494099, "[color=#1C85FF]", "Oracle"),     #Oracle         
-            (443210169, "[color=#caa047]", "ImperialPC"), #ImperialPC
-            (389880533, "[color=#BD5866]", "NiSs4n"),     #NiSs4n
-            (111111111, "[color=#287065]", "Velo"),       #Velo todo
-        }
+        self.userInfo = self.getUserInfo()
         self.chatFormat = "[/b][color=grey]"
 
         #empty clientlist
-        self.tsClients = []
+        self.tsClients = dict()
 
         #set default ids
         self.invokerid = "0"
@@ -122,14 +117,16 @@ class Teamspeakbot(object):
                     self.writeTelegram("started listening to TS3 Chat")
 
                 #set username for current id
-                elif chat_id == self.ts3 and command == '/setusername':
+                elif chat_id == self.ts3 and command.split(" ")[0] == '/setusername':
                     if full_command.__len__() == 2:
+                        print user_id, full_command[1]
                         self.setUsername(user_id, full_command[1])
+                        self.writeTelegram("username set")
                     else:
                         self.writeTelegram("only use following syntax: /setusername USERNAME")
 
                 #set usercolor for current id
-                elif chat_id == self.ts3 and command == '/setusercolor':
+                elif chat_id == self.ts3 and command.split(" ")[0] == '/setusercolor':
                     if full_command.__len__() == 2:
                         self.setUserColor(user_id, full_command[1], self.getUsername(msg))
                     else:
@@ -139,7 +136,7 @@ class Teamspeakbot(object):
                 elif chat_id == self.ts3:
                     self.writeTeamspeak(
                         self.userFormat 
-                        + self.getUsername(msg) 
+                        + self.getUsernameWithColor(msg) 
                         + ': ' 
                         + self.chatFormat 
                         + msg['text']
@@ -147,10 +144,55 @@ class Teamspeakbot(object):
 
 #           else:
 #               writeTelegram('bot is not in Teamspeak')
+
+   #listen to Teamspeakchat
+    def tsMessageLoop(self, ts3):
+        while 1:
+            if self.tsRunning:
+                #get teamspeak clientquery messages
+                messages = self.client.get_messages()
+                for message in messages:
+                    if self.debug: print message
+
+                    #outputs teamspeakchat in telegram group
+                    if message.command == 'notifytextmessage' and message['invokerid'] != self.invokerid and self.listen:
+                        msg = (message['invokername'] + ':\n' + message['msg']).replace("[URL]","").replace("[/URL]","")
+                        self.writeTelegram(msg)
+
+                    #Teamspeakuser joined 
+                    elif message.command == "notifycliententerview" and message['ctid'] == self.channelid:
+                        if 'client_nickname' in message.keys() and 'clid' in message.keys():
+                            self.tsClients[message['clid']] = message['client_nickname']
+                            self.writeTelegram(message['client_nickname'] + " joined Teamspeak")
+
+                    #Teamspeakuser left            
+                    elif message.command == "notifyclientleftview" and message['cfid'] == self.channelid:
+                        if 'clid' in message.keys():
+                            self.writeTelegram(self.tsClients[message['clid']] + " left Teamspeak")
+                            del self.tsClients[message['clid']]
+
+                    #gets current userid
+                    elif message.is_response_to(Command('whoami')):
+                        self.invokerid = message['clid']
+                        self.channelid = message['cid']
+                        self.sendStatus(self.client, self.channelid)
+
+                    #status output for telegram group    
+                    elif message.is_response():
+                        #reset tsClients list
+                        del self.tsClients
+                        self.tsClients = dict()
+                        #build message for status and appends these Clients to list
+                        msg = 'Currently Online:'
+                        for part in message.responses:
+                            if 'client_nickname' in part.keys() and 'clid' in part.keys():
+                                self.tsClients[part['clid']] = part['client_nickname']
+                                msg += '\n' + part['client_nickname']
+                        msg += '\nlisten: ' + str(self.listen)
+
+                        self.writeTelegram(msg)
+            time.sleep(1)
     
-
-
-
     #starts Teamspeak
     def tsStart(self, auth):
 
@@ -179,7 +221,7 @@ class Teamspeakbot(object):
     #stops Teamspeak
     def tsStop(self, client):
 
-        if !tsRunning:
+        if not self.tsRunning:
             self.writeTelegram("not in Teamspeak")
             return
 
@@ -227,7 +269,7 @@ class Teamspeakbot(object):
             self.bot.getMe()
             x=datetime.today()
             print x
-            if self.tsClients.__len__() == 1 and self.tsClients[0][0] == self.invokerid and self.tsRunning:
+            if self.tsClients.__len__() == 1 and self.invokerid in self.tsClients and self.tsRunning:
                 self.writeTelegram("auto quit")
                 self.tsQuit(self.client)
             time.sleep(60)
@@ -238,97 +280,51 @@ class Teamspeakbot(object):
         t.daemon = True
         t.start()
 
-    #sets username for id
-    def setUsername(self, id, username):
-        for part in self.userInfo:
-            if part[0] == id:
-                part[2] = username
-                return
-        self.userInfo.append((id,"[color=#999999]",username))
+    def getUserInfo(self):
+        with open("clientInfo.pkl", "rb") as file:
+            return pickle.load(file) 
 
-
-    #sets usercolor for id if its valid
-    def setUserColor(self, id, usercolor, username):
-
-        #checks if its a valid hex RGB code
-        if len(usercolor) == 6
-            for part in usercolor:
-                if (part < 48 or part > 57) and (part < 65 or part > 70):
-                    self.writeTelegram("its not a valid Hex RGB code")
-                    return
-
-        #sets usercolor for id 
-        for part in self.userInfo:
-            if part[0] == id:
-                part[1] = "[color=" + usercolor + "]"
-                return
-        self.userInfo.append((id,"[color=" + usercolor + "]", username))
-
-    
+    def setUserInfo(self, info):
+        with open("clientInfo.pkl", "wb") as file:
+            pickle.dump(info, file)
 
     #gets username from msg 
     def getUsername(self, msg):
-
         #if known then colorize it and make default name
-        if 'id' in msg['from']:
-            for part in self.userInfo:
-                if part[0] == msg['from']['id']:
-                    return part[1] + part[2]
+        if 'id' in msg['from'] and msg['from']['id']  in self.userInfo:
+            return self.userInfo[msg['from']['id'] ][1]
         elif 'username' in msg['from']: 
             return msg['from']['username']           
         elif 'first_name' in msg['from']: 
             return msg['from']['first_name']
         return "no username found"
 
-    #listen to Teamspeakchat
-    def tsMessageLoop(self, ts3):
-        while 1:
-            if self.tsRunning:
-                #get teamspeak clientquery messages
-                messages = self.client.get_messages()
-                for message in messages:
-                    if self.debug: print message
+    #gets username from msg with color
+    def getUsernameWithColor(self, msg):
+        #if known then colorize it and make default name
+        if 'id' in msg['from'] and msg['from']['id'] in self.userInfo:
+            return self.userInfo[msg['from']['id'] ][0] + self.getUsername(msg)
+        return self.getUsername(msg)
 
-                    #outputs teamspeakchat in telegram group
-                    if message.command == 'notifytextmessage' and message['invokerid']!=self.invokerid and self.listen:
-                        #build message for Telegram
-                        msg = (message['invokername'] + ':\n' + message['msg']).replace("[URL]","").replace("[/URL]","")
-                        self.writeTelegram(msg)
+    #sets username for id
+    def setUsername(self, id, username):
+        self.userInfo[id] = (self.userInfo[id][0] if id in self.userInfo else "[color=#aaaaaa]", username)
+        self.setUserInfo(self.userInfo)
+    
 
-                    #Teamspeakuser joined 
-                    elif message.command == "notifycliententerview" and message['ctid'] == self.channelid:
-                        if 'client_nickname' in message.keys() and 'clid' in message.keys():
-                            self.tsClients.append((message['clid'], message['client_nickname']))
-                            self.writeTelegram(message['client_nickname'] + " joined Teamspeak")
+    #sets usercolor for id if its valid
+    def setUserColor(self, id, usercolor, username):
+        #checks if its a valid hex RGB code
+        if len(usercolor) == 6:
+            for part in usercolor:
+                number = ord(part)
+                if (number < 48 or number > 57) and (number < 97 or number > 102):
+                    self.writeTelegram("its not a valid Hex RGB code")
+                    return 
 
-                    #Teamspeakuser left            
-                    elif message.command == "notifyclientleftview" and message['cfid'] == self.channelid:
-                        if 'clid' in message.keys():
-                            for part in self.tsClients:
-                                if part[0] == message['clid']:
-                                    self.writeTelegram(part[1] + " left Teamspeak")
-                                    self.tsClients.remove(part)
-
-                    #gets current userid
-                    elif message.is_response_to(Command('whoami')):
-                        self.invokerid = message.__getitem__('clid')
-                        self.channelid = message.__getitem__('cid')
-                        self.sendStatus(self.client, self.channelid)
-
-                    #status output for telegram group    
-                    elif message.is_response():
-                        #reset tsClients list
-                        self.tsClients = []
-                        #build message for status and appends these Clients to list
-                        msg = 'Currently Online:'
-                        for part in message.responses:
-                            if 'client_nickname' in part.keys() and 'clid' in part.keys():
-                                self.tsClients.append((part.__getitem__('clid'), part.__getitem__('client_nickname')))
-                                msg += '\n' + part.__getitem__('client_nickname')
-                        msg += '\nlisten: ' + str(self.listen)
-
-                        self.writeTelegram(msg)
-            time.sleep(1)
+        self.userInfo[id] = ("[color=#" + usercolor + "]", username)
+        self.setUserInfo(self.userInfo)
+        self.writeTelegram("usercolor set")
 
 #start Teamspeakbot
 Teamspeakbot()
