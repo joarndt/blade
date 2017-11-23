@@ -1,3 +1,4 @@
+# -*- coding: iso-8859-1 -*-
 # teamspeakbot
 import pickle
 from datetime import datetime
