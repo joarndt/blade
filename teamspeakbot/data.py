@@ -11,14 +11,14 @@ class Data(object):
             self.botData = self.readBotData()
         except (OSError, IOError, EOFError) as e:
             self.botData = dict()
-            self.writeBotData(self.botData)
+            self.writeBotData()
 
         # create or read user Info
         try:
             self.userInfo = self.readUserInfo()
         except (OSError, IOError, EOFError) as e:
             self.userInfo = dict()
-            self.writeUserInfo(self.botData)
+            self.writeUserInfo()
 
         if 'token' not in self.botData:
             tmp = raw_input("please enter Telegram Bot Token:").replace("\n", "").replace(" ","")
