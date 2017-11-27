@@ -1,34 +1,22 @@
 # -*- coding: iso-8859-1 -*-
-# teamspeakbot
 from datetime import datetime
-import time
-import argparse
-import threading
 import telepot
 from telepot.loop import MessageLoop
-from data import *
 from tsclient import *
+
+# Telegram bot class
 
 
 class Bot(object):
 
     # init
-    def __init__(self, data):
+    def __init__(self, data, debug=False):
 
-        # set debugmode
-        # self.debug = sys.argv[0] == "-debug" or sys.argv[0] == "-d"
-        # print self.debug, sys.argv[1]
-        self.debug = True
-
-        # parser = argparse.ArgumentParser(description='Process some integers.')
-        # parser.add_argument("-foo", ..., required=True)
-        # parser.parse_args()
-
+        # data and debugging
+        self.debug = debug
         self.data = data
 
-        ######################
-        ### Ts Chat Format ###
-        ######################
+        # Ts Chat Format
         self.userFormat = "[b]"
         self.chatFormat = "[/b][color=grey]"
 
@@ -124,7 +112,6 @@ class Bot(object):
                  self.bot, chatId, self.data.getAuth())
         self.groupId = chatId
         self.data.setChatId(chatId)
-
 
     # write message into Telegram chat
     def writeTelegram(self, string):

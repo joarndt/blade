@@ -13,7 +13,7 @@ class Tsclient(object):
 
     def __init__(self, bot, groupId, auth):
 
-		# empty clientlist
+        # empty clientlist
         self.debug = True
         self.tsClients = dict()
         self.auth = auth
@@ -34,7 +34,7 @@ class Tsclient(object):
         self.messageThread.daemon = True
         self.messageThread.start()
 
-	# listen to Teamspeakchat
+    # listen to Teamspeakchat
     def tsMessageLoop(self):
         while 1:
             if self.tsRunning:
@@ -83,7 +83,7 @@ class Tsclient(object):
                         self.writeTelegram(msg)
             time.sleep(1)
 
-	# starts Teamspeak
+    # starts Teamspeak
     def tsStart(self):
 
         # if Teamspeak is already running
@@ -95,7 +95,7 @@ class Tsclient(object):
         self.writeTelegram("joining Teamspeak")
 
         # starts Teamspeak
-        process = subprocess.Popen(["ts3"],stdout = subprocess.PIPE)
+        subprocess.Popen(["ts3"], stdout=subprocess.PIPE)
         time.sleep(20)
 
         # initiate Clientquery connection
@@ -133,8 +133,9 @@ class Tsclient(object):
             self.tsStop()
         else:
             self.writeTelegram('Not in Teamspeak')
+
     def autoQuit(self):
-    	if self.tsClients.__len__() == 1 and self.invokerid in self.tsClients and self.tsRunning:
+        if self.tsClients.__len__() == 1 and self.invokerid in self.tsClients and self.tsRunning:
             self.tsQuit()
 
     # sends whoami command for verification
@@ -147,7 +148,7 @@ class Tsclient(object):
 
     # returns tsRunning variable
     def getTsRunning(self):
-    	return self.tsRunning
+        return self.tsRunning
 
     # sets tsRunning variable
     def setTsRunning(self, tmp):
@@ -159,7 +160,7 @@ class Tsclient(object):
 
     # write message into Teamspeak chat
     def writeTeamspeak(self, string):
-        message  = "sendtextmessage targetmode=2 msg=" + string.replace(" ","\s")
+        message = "sendtextmessage targetmode=2 msg=" + string.replace(" ", "\s")
         self.client.send_command(Command(message.encode('utf-8')))
 
     def writeTelegram(self, string):
