@@ -11,10 +11,10 @@ from client import *
 
 class Tsclient(object):
 
-    def __init__(self, bot, groupId, auth):
+    def __init__(self, bot, groupId, auth, debug=False):
 
         # empty clientlist
-        self.debug = True
+        self.debug = debug
         self.tsClients = dict()
         self.auth = auth
         self.bot = bot
@@ -58,8 +58,11 @@ class Tsclient(object):
                     # Teamspeakuser left            
                     elif message.command == "notifyclientleftview" and message['cfid'] == self.channelid:
                         if 'clid' in message.keys():
-                            self.writeTelegram(self.tsClients[message['clid']] + " left Teamspeak")
-                            del self.tsClients[message['clid']]
+                            if message['clid'] in self.tsClients:
+                                self.writeTelegram(self.tsClients[message['clid']] + " left Teamspeak")
+                                del self.tsClients[message['clid']]
+                            else:
+                                self.writeTelegram("BIade ffs fix me")
 
                     # gets current userid
                     elif message.is_response_to(Command('whoami')):

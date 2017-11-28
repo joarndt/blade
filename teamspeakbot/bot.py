@@ -33,7 +33,7 @@ class Bot(object):
         MessageLoop(self.bot, self.handle).run_as_thread()
         self.keepAlive()
 
-        self.initTeamspeak(self.data.getChatId())
+        self.initTeamspeak(self.data.getChatId(), self.debug)
 
         print 'I am listening ...'
 
@@ -55,7 +55,7 @@ class Bot(object):
             print 'Got command: %s' % command
 
             if self.groupId == "0":
-                self.initTeamspeak(chat_id)
+                self.initTeamspeak(chat_id, self.debug)
 
             # do nothing for now
             elif chat_id != self.groupId:
@@ -109,7 +109,7 @@ class Bot(object):
     def initTeamspeak(self, chatId):
         if not(chatId == "0"):
             self.teamspeak = Tsclient(
-                 self.bot, chatId, self.data.getAuth())
+                 self.bot, chatId, self.data.getAuth(), self.debug)
         self.groupId = chatId
         self.data.setChatId(chatId)
 
