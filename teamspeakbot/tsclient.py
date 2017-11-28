@@ -22,6 +22,7 @@ class Tsclient(object):
 
         # variable for listening to ts chat
         self.listen = True
+        self.quiet = False
 
         # indicates if ts is running
         self.tsRunning = False
@@ -49,6 +50,14 @@ class Tsclient(object):
                         msg = (message['invokername'] + ':\n' + message['msg']).replace("[URL]","").replace("[/URL]","")
                         self.writeTelegram(msg)
 
+                    # Teamspeakuser changed to this channel
+                    elif message.command == "notifyclientmoved" and message['ctid'] == self.channelid:
+                        self.sendStatus(True)
+
+                    # Teamspeakuser changed to another channel
+                    elif message.command == "notifyclientmoved" and message['clid'] in self.tsClients:
+                        self.clientLeft(message['clid'])
+
                     # Teamspeakuser joined 
                     elif message.command == "notifycliententerview" and message['ctid'] == self.channelid:
                         if 'client_nickname' in message.keys() and 'clid' in message.keys():
@@ -58,11 +67,7 @@ class Tsclient(object):
                     # Teamspeakuser left            
                     elif message.command == "notifyclientleftview" and message['cfid'] == self.channelid:
                         if 'clid' in message.keys():
-                            if message['clid'] in self.tsClients:
-                                self.writeTelegram(self.tsClients[message['clid']] + " left Teamspeak")
-                                del self.tsClients[message['clid']]
-                            else:
-                                self.writeTelegram("BIade ffs fix me")
+                            self.clientLeft(message['clid'])
 
                     # gets current userid
                     elif message.is_response_to(Command('whoami')):
@@ -72,18 +77,9 @@ class Tsclient(object):
 
                     # status output for telegram group    
                     elif message.is_response():
-                        # reset tsClients list
-                        del self.tsClients
-                        self.tsClients = dict()
-                        # build message for status and appends these Clients to list
-                        msg = 'Currently Online:'
-                        for part in message.responses:
-                            if 'client_nickname' in part.keys() and 'clid' in part.keys():
-                                self.tsClients[part['clid']] = part['client_nickname']
-                                msg += '\n' + part['client_nickname']
-                        msg += '\nlisten: ' + str(self.listen)
 
-                        self.writeTelegram(msg)
+                        self.processStatus(message)
+          
             time.sleep(1)
 
     # starts Teamspeak
@@ -92,9 +88,8 @@ class Tsclient(object):
         # if Teamspeak is already running
         if self.tsRunning:
             self.writeTelegram("already in Teamspeak")
-            
 
-        # some  output for Telegram
+        # some output for Telegram
         self.writeTelegram("joining Teamspeak")
 
         # starts Teamspeak
@@ -146,8 +141,41 @@ class Tsclient(object):
         self.client.send_command(Command('whoami'))
 
     # send status message for channel_id
-    def sendStatus(self):
+    def sendStatus(self, quiet=False):
+        self.quiet = quiet
         self.client.send_command(Command('channelclientlist cid=' + self.channelid))
+
+    def processStatus(self, message):
+        clients = dict()
+
+        # build message for status and appends these Clients to list
+        msg = 'Currently Online:'
+        for part in message.responses:
+            if 'client_nickname' in part.keys() and 'clid' in part.keys():
+
+                # get new user if somebody joined
+                if part['clid'] not in self.tsClients:
+                    self.writeTelegram(part['client_nickname'] + " joined Teamspeak")
+
+                # add him to list
+                clients[part['clid']] = part['client_nickname']
+
+                # add to message
+                msg += '\n' + part['client_nickname']
+        msg += '\nlisten: ' + str(self.listen)
+
+        self.tsClients.clear()
+        self.tsClients = clients
+
+        self.writeTelegram(msg) if not self.quiet else self.quiet = False
+
+    def clientLeft(self, uid):
+        if uid in self.tsClients:
+            self.writeTelegram(self.tsClients[uid] + " left Teamspeak")
+            del self.tsClients[uid]
+        else:
+            self.writeTelegram("BIade ffs fix me")
+
 
     # returns tsRunning variable
     def getTsRunning(self):
@@ -159,7 +187,7 @@ class Tsclient(object):
 
     # sets listen variable
     def setListen(self, tmp):
-    	self.tsListen = tmp
+        self.tsListen = tmp
 
     # write message into Teamspeak chat
     def writeTeamspeak(self, string):
