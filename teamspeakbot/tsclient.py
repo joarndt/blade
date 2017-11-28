@@ -154,7 +154,7 @@ class Tsclient(object):
             if 'client_nickname' in part.keys() and 'clid' in part.keys():
 
                 # get new user if somebody joined
-                if part['clid'] not in self.tsClients:
+                if part['clid'] not in self.tsClients and self.tsClients.__len__() > 0:
                     self.writeTelegram(part['client_nickname'] + " joined Teamspeak")
 
                 # build dictionary
