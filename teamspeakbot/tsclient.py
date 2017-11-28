@@ -157,7 +157,7 @@ class Tsclient(object):
                 if part['clid'] not in self.tsClients:
                     self.writeTelegram(part['client_nickname'] + " joined Teamspeak")
 
-                # add him to list
+                # build dictionary
                 clients[part['clid']] = part['client_nickname']
 
                 # add to message
@@ -167,7 +167,10 @@ class Tsclient(object):
         self.tsClients.clear()
         self.tsClients = clients
 
-        self.writeTelegram(msg) if not self.quiet else self.quiet = False
+        if not self.quiet:
+            self.writeTelegram(msg)
+        else:
+            self.quiet = False
 
     def clientLeft(self, uid):
         if uid in self.tsClients:
