@@ -46,23 +46,27 @@ class Tsclient(object):
                     if self.debug: print message
 
                     # outputs teamspeakchat in telegram group
-                    if message.command == 'notifytextmessage' and message['invokerid'] != self.invokerid and self.listen:
-                        msg = (message['invokername'] + ':\n' + message['msg']).replace("[URL]","").replace("[/URL]","")
-                        self.writeTelegram(msg)
+                    if message.command == 'notifytextmessage':
+                        if self.listen and message['invokerid'] != self.invokerid:
+                            msg = "_*" + message['invokername'] + ':*_\n' + message['msg']
+                            msg = msg.replace("[URL]", "").replace("[/URL]", "")
+                            self.writeTelegram(msg)
 
                     # Teamspeakuser changed to this channel
-                    elif message.command == "notifyclientmoved" and message['ctid'] == self.channelid:
-                        self.sendStatus(True)
+                    elif message.command == "notifyclientmoved":
+                        if 'ctid'in message.keys() and ['ctid'] == self.channelid:
+                            self.sendStatus(True)
 
                     # Teamspeakuser changed to another channel
-                    elif message.command == "notifyclientmoved" and message['clid'] in self.tsClients:
-                        self.clientLeft(message['clid'])
+                    elif message.command == "notifyclientmoved":
+                        if 'clid'in message.keys():
+                            self.clientLeft(message['clid'])
 
                     # Teamspeakuser joined 
-                    elif message.command == "notifycliententerview" and message['ctid'] == self.channelid:
-                        if 'client_nickname' in message.keys() and 'clid' in message.keys():
-                            self.tsClients[message['clid']] = message['client_nickname']
-                            self.writeTelegram(message['client_nickname'] + " joined Teamspeak")
+                    elif message.command == "notifycliententerview":
+                        if 'ctid' in message.keys() and ['ctid'] == self.channelid:
+                            if 'client_nickname' in message.keys() and 'clid' in message.keys():
+                                self.clientJoined(message['clid'], message['client_nickname'])
 
                     # Teamspeakuser left            
                     elif message.command == "notifyclientleftview" and message['cfid'] == self.channelid:
@@ -77,7 +81,6 @@ class Tsclient(object):
 
                     # status output for telegram group    
                     elif message.is_response():
-
                         self.processStatus(message)
           
             time.sleep(1)
@@ -87,10 +90,10 @@ class Tsclient(object):
 
         # if Teamspeak is already running
         if self.tsRunning:
-            self.writeTelegram("already in Teamspeak")
+            self.writeTelegram("_*already in Teamspeak*_")
 
         # some output for Telegram
-        self.writeTelegram("joining Teamspeak")
+        self.writeTelegram("_*joining Teamspeak*_")
 
         # starts Teamspeak
         subprocess.Popen(["ts3"], stdout=subprocess.PIPE)
@@ -112,11 +115,11 @@ class Tsclient(object):
     def tsStop(self):
 
         if not self.tsRunning:
-            self.writeTelegram("not in Teamspeak")
+            self.writeTelegram("_*not in Teamspeak*_")
             return
 
         # some output for Telegram
-        self.writeTelegram("quitting Teamspeak")
+        self.writeTelegram("_*quitting Teamspeak*_")
 
         # close connection and quit Teamspeak
         self.setTsRunning(False)
@@ -130,7 +133,7 @@ class Tsclient(object):
         if self.tsRunning:
             self.tsStop()
         else:
-            self.writeTelegram('Not in Teamspeak')
+            self.writeTelegram('_*Not in Teamspeak*_')
 
     def autoQuit(self):
         if self.tsClients.__len__() == 1 and self.invokerid in self.tsClients and self.tsRunning:
@@ -149,13 +152,13 @@ class Tsclient(object):
         clients = dict()
 
         # build message for status and appends these Clients to list
-        msg = 'Currently Online:'
+        msg = '_*Currently Online:*_'
         for part in message.responses:
             if 'client_nickname' in part.keys() and 'clid' in part.keys():
 
                 # get new user if somebody joined
                 if part['clid'] not in self.tsClients and self.tsClients.__len__() > 0:
-                    self.writeTelegram(part['client_nickname'] + " joined Teamspeak")
+                    self.writeTelegram("_*" + part['client_nickname'] + " joined Teamspeak*_")
 
                 # build dictionary
                 clients[part['clid']] = part['client_nickname']
@@ -174,10 +177,14 @@ class Tsclient(object):
 
     def clientLeft(self, uid):
         if uid in self.tsClients:
-            self.writeTelegram(self.tsClients[uid] + " left Teamspeak")
+            self.writeTelegram("_*" + self.tsClients[uid] + " left Teamspeak*_")
             del self.tsClients[uid]
         else:
-            self.writeTelegram("BIade ffs fix me")
+            self.writeTelegram("_*BIade ffs fix me*_")
+
+    def clientJoined(self, uid, nickname):
+        self.tsClients[uid] = nickname
+        self.writeTelegram("_*" + nickname + " joined Teamspeak*_")
 
 
     # returns tsRunning variable
@@ -198,4 +205,4 @@ class Tsclient(object):
         self.client.send_command(Command(message.encode('utf-8')))
 
     def writeTelegram(self, string):
-        self.bot.sendMessage(self.groupId, string)
+        self.bot.sendMessage(self.groupId, string, 'Markdown')

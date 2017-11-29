@@ -78,12 +78,12 @@ class Bot(object):
                 # unlisten from teamspeakchat
                 elif command == '/stfu':
                     self.teamspeak.setListen(False)
-                    self.writeTelegram('stopped listening to TS3 Chat')
+                    self.writeTelegram('_*stopped listening to TS3 Chat*_')
 
                 # listen to teamspeakchat
                 elif command == '/listen':
                     self.teamspeak.setListen(True)
-                    self.writeTelegram("started listening to TS3 Chat")
+                    self.writeTelegram('_*started listening to TS3 Chat*_')
 
                 # set username for current id
                 elif command.split(" ")[0] == '/setusername':
@@ -115,7 +115,7 @@ class Bot(object):
 
     # write message into Telegram chat
     def writeTelegram(self, string):
-        self.bot.sendMessage(self.groupId, string)
+        self.bot.sendMessage(self.groupId, string, 'Markdown')
 
     # thread for keeping the connection
     def __keepAliveThread(self):
@@ -147,7 +147,7 @@ class Bot(object):
     def setUsername(self, user_id, command):
         if command.__len__() == 2:
             self.data.setUsername(user_id, command[1])
-            self.writeTelegram("username set")
+            self.writeTelegram("_*Username set*_")
         else:
             self.writeTelegram(
                 "only use following syntax: /setusername USERNAME")
@@ -156,10 +156,10 @@ class Bot(object):
         if command.__len__() == 2:
             if self.data.setUsercolor(user_id, command[
                               1], self.getUsername(msg)):
-                self.writeTelegram("usercolor set ")
+                self.writeTelegram("_*Usercolor set*_")
         else:
             self.writeTelegram(
-                "only use following syntax: /setusercolor ffffff")
+                "_*only use following syntax:*_ /setusercolor ffffff")
 
     # gets username from msg with color
     def getUsernameWithColor(self, msg):
