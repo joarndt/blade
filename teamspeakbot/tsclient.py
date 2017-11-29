@@ -11,6 +11,7 @@ from client import *
 
 class Tsclient(object):
 
+    # init Ts client
     def __init__(self, bot, groupId, auth, debug=False):
 
         # saving variables
@@ -32,6 +33,9 @@ class Tsclient(object):
         # set default ids
         self.invokerid = "0"
         self.channelid = "0"
+
+        # init message thread
+        self.messageThread = self.initMessageThread()
 
     # listen to Teamspeakchat
     def tsMessageLoop(self):
@@ -82,11 +86,12 @@ class Tsclient(object):
                         self.processStatus(message)
           
             time.sleep(1)
-
-    def messageThread(self):
-        self.messageThread = threading.Thread(target=self.tsMessageLoop)
-        self.messageThread.daemon = True
-        self.messageThread.start()
+    # inits messageThread
+    def initMessageThread(self):
+        thread = threading.Thread(target=self.tsMessageLoop)
+        thread.daemon = True
+        thread.start()
+        return thread
 
     # starts Teamspeak
     def tsStart(self):
