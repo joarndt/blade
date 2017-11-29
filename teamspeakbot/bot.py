@@ -106,6 +106,7 @@ class Bot(object):
 #           else:
 #               writeTelegram('bot is not in Teamspeak')
 
+    # init Teamspeak
     def initTeamspeak(self, chatId):
         if not(chatId == "0"):
             self.teamspeak = Tsclient(
@@ -144,6 +145,7 @@ class Bot(object):
             return msg['from']['first_name']
         return "no username found"
 
+    # sets username in data Object
     def setUsername(self, user_id, command):
         if command.__len__() == 2:
             self.data.setUsername(user_id, command[1])
@@ -152,6 +154,7 @@ class Bot(object):
             self.writeTelegram(
                 "only use following syntax: /setusername USERNAME")
 
+    # sets usercolor in data Object
     def setUsercolor(self, user_id, command, msg):
         if command.__len__() == 2:
             if self.data.setUsercolor(user_id, command[

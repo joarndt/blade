@@ -13,14 +13,16 @@ class Tsclient(object):
 
     def __init__(self, bot, groupId, auth, debug=False):
 
-        # empty clientlist
+        # saving variables
         self.debug = debug
-        self.tsClients = dict()
         self.auth = auth
         self.bot = bot
         self.groupId = groupId
 
-        # variable for listening to ts chat
+        # empty clientlist
+        self.tsClients = dict()
+
+        # necessary for query handling
         self.listen = True
         self.quiet = False
 
@@ -30,10 +32,6 @@ class Tsclient(object):
         # set default ids
         self.invokerid = "0"
         self.channelid = "0"
-
-        self.messageThread = threading.Thread(target=self.tsMessageLoop)
-        self.messageThread.daemon = True
-        self.messageThread.start()
 
     # listen to Teamspeakchat
     def tsMessageLoop(self):
@@ -69,8 +67,8 @@ class Tsclient(object):
                                 self.clientJoined(message['clid'], message['client_nickname'])
 
                     # Teamspeakuser left            
-                    elif message.command == "notifyclientleftview" and message['cfid'] == self.channelid:
-                        if 'clid' in message.keys():
+                    elif message.command == "notifyclientleftview":
+                        if 'cfid' in message.keys() and message['cfid'] == self.channelid and 'clid' in message.keys():
                             self.clientLeft(message['clid'])
 
                     # gets current userid
@@ -84,6 +82,11 @@ class Tsclient(object):
                         self.processStatus(message)
           
             time.sleep(1)
+
+    def messageThread(self):
+        self.messageThread = threading.Thread(target=self.tsMessageLoop)
+        self.messageThread.daemon = True
+        self.messageThread.start()
 
     # starts Teamspeak
     def tsStart(self):
@@ -108,8 +111,6 @@ class Tsclient(object):
         self.setTsRunning(True)
         self.setListen(True)
         self.sendWhoami()
-
-        
 
     # stops Teamspeak
     def tsStop(self):
@@ -185,7 +186,6 @@ class Tsclient(object):
     def clientJoined(self, uid, nickname):
         self.tsClients[uid] = nickname
         self.writeTelegram("_*" + nickname + " joined Teamspeak*_")
-
 
     # returns tsRunning variable
     def getTsRunning(self):
