@@ -141,6 +141,7 @@ class Tsclient(object):
         else:
             self.writeTelegram('_*Not in Teamspeak*_')
 
+    # quits if bot is alone on the server
     def autoQuit(self):
         if self.tsClients.__len__() == 1 and self.invokerid in self.tsClients and self.tsRunning:
             self.tsQuit()
@@ -154,6 +155,9 @@ class Tsclient(object):
         self.quiet = quiet
         self.client.send_command(Command('channelclientlist cid=' + self.channelid))
 
+    # builds tsclient dictionary so it knows who is on the server currently
+    # adds user joined message if somebody isn't tracked yet
+    # and builds status message for Telegram if its not a quiet status
     def processStatus(self, message):
         clients = dict()
 
@@ -181,6 +185,7 @@ class Tsclient(object):
         else:
             self.quiet = False
 
+    # clientLeft message and deletes the leaving client from tsclients
     def clientLeft(self, uid):
         if uid in self.tsClients:
             self.writeTelegram("_*" + self.tsClients[uid] + " left Teamspeak*_")
@@ -188,6 +193,7 @@ class Tsclient(object):
         else:
             self.writeTelegram("_*BIade ffs fix me*_")
 
+    # client joined message and adds the joined client to tsclients
     def clientJoined(self, uid, nickname):
         self.tsClients[uid] = nickname
         self.writeTelegram("_*" + nickname + " joined Teamspeak*_")
