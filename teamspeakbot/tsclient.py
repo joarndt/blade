@@ -209,5 +209,6 @@ class Tsclient(object):
         message = "sendtextmessage targetmode=2 msg=" + string.replace(" ", "\s")
         self.client.send_command(Command(message.encode('utf-8')))
 
+    # write
     def writeTelegram(self, string):
         self.bot.sendMessage(self.groupId, string, 'Markdown')
